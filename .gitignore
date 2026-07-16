@@ -1,0 +1,36 @@
+# Entornos y Credenciales
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# Base de Datos y Cachés Locales
+*.db
+*.sqlite
+backend/biaticos.db
+
+# Python (Backend)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Node / React (Frontend)
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.eslintcache
+
+# Archivos de subida locales
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
+
+# Sistema Operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
