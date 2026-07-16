@@ -1,4 +1,15 @@
 import os
+import time
+
+# ==========================================
+# Configuracion de Zona Horaria (Estilo Django)
+# ==========================================
+os.environ["TZ"] = "America/Bogota"
+try:
+    time.tzset()
+except AttributeError:
+    pass # Fallback para Windows que no soporta tzset nativo
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,6 +89,6 @@ def health_check():
     return {"status": "ok", "app": "biaticos_api", "auth": "pandora_sso"}
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8016))
+    port = int(os.getenv("PORT", 8029))
     host = os.getenv("HOST", "127.0.0.1")
     uvicorn.run("main:app", host=host, port=port, reload=True)

@@ -4,7 +4,7 @@ from database import SessionLocal
 import models
 from auth_utils import create_access_token
 
-BASE_URL = "http://localhost:8016"
+BASE_URL = "http://localhost:8029"
 
 def test_full_flow():
     client = httpx.Client()

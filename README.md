@@ -39,7 +39,7 @@ En el directorio `/backend`, crea o edita el archivo `.env` con las siguientes v
 
 ```env
 # Servidor
-PORT=8016
+PORT=8029
 HOST=0.0.0.0
 
 # Base de datos (MySQL o cambiar a SQLite sqlite:///./biaticos.db)
@@ -70,7 +70,7 @@ Para facilitar el desarrollo, el proyecto incluye scripts automatizados de encen
 * **Windows (Command Prompt)**: Ejecuta `iniciar.bat`
 
 *Estos scripts realizarán las siguientes acciones de forma automática:*
-1. Levantarán el **Backend** en `http://localhost:8016` (con recarga en vivo).
+1. Levantarán el **Backend** en `http://localhost:8029` (con recarga en vivo).
 2. Levantarán el **Frontend** en `http://localhost:5173`.
 3. Abrirán automáticamente el navegador en la pestaña de la aplicación.
 
@@ -110,3 +110,74 @@ La aplicación permite subir fotos de recibos, facturas, comprobantes de pago e 
 * Fecha de la transacción (normalizada a formato estándar `AAAA-MM-DD`).
 * IVA desglosado.
 * Clasificación automática por categorías (Transporte, Alimentación, Hospedaje, Otros).
+
+---
+
+## 🌐 Despliegue en Producción (Nginx & NSSM)
+
+### Configuración de Nginx
+Para desplegar la aplicación utilizando Nginx, puedes usar el siguiente bloque de configuración, el cual enruta el tráfico del frontend y envía las peticiones de la API al puerto 8029, incluyendo el soporte necesario para WebSockets:
+
+```nginx
+# =================================================================
+# 25. Viáticos - Guyana
+# =================================================================
+server {
+    listen 443 ssl;
+    server_name viaticos.pcmejia.com;
+
+    # Frontend (Vite compilado)
+    root "C:\PCM_Apps\viaticos\frontend\dist";
+    index index.html;
+
+    # Enrutamiento de SPA
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Enrutamiento a la API (Puerto 8029)
+    location /api/ {
+        proxy_pass http://127.0.0.1:8029;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # ==============================================================
+    # CRÍTICO: Enrutamiento y Upgrade para WebSockets (Socket.IO)
+    # Soluciona error: WebSocket connection to 'wss://...' failed
+    # ==============================================================
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:8029;
+        
+        # Cabeceras obligatorias para el Upgrade de HTTP/1.1 a WebSocket
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Evitar desconexiones por inactividad y deshabilitar buffering
+        proxy_buffering off;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+}
+```
+
+### Configuración de NSSM (Servicio de Windows)
+Para ejecutar el backend de FastAPI como un servicio de Windows usando NSSM, configura los siguientes parámetros en la interfaz de NSSM o mediante línea de comandos:
+
+* **Path**: `C:\Ruta\A\Tu\Entorno\Virtual\Scripts\python.exe` *(o la ruta al `python.exe` global)*
+* **Arguments**: `main.py`
+* **Details -> AppDirectory**: `C:\PCM_Apps\Viaticos\backend`
+
+O usando la línea de comandos de NSSM:
+```cmd
+nssm install ViaticosBackend "C:\Ruta\A\Tu\python.exe" "main.py"
+nssm set ViaticosBackend AppDirectory "C:\PCM_Apps\Viaticos\backend"
+nssm start ViaticosBackend
+```

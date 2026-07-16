@@ -5,7 +5,7 @@ import { Loader2, AlertCircle, Shield, ExternalLink } from "lucide-react";
 
 // Origen de Pandora SSO (ajustar segun ambiente)
 const PANDORA_ORIGIN = import.meta.env.VITE_PANDORA_ORIGIN || "http://localhost:5175";
-const PANDORA_URL    = import.meta.env.VITE_PANDORA_URL    || "http://localhost:5175";
+const PANDORA_URL = import.meta.env.VITE_PANDORA_URL || "http://localhost:5175";
 
 const SSOLoginPage = () => {
   const { loginWithPandora } = useAuth();
@@ -137,10 +137,10 @@ const SSOLoginPage = () => {
         </div>
 
         <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 8px" }}>
-          Control de Viaticos
+          Control de Viáticos
         </h1>
         <p style={{ fontSize: "13px", color: "#475569", margin: "0 0 36px", lineHeight: 1.6 }}>
-          Autenticacion integrada con Pandora SSO
+          Autenticación integrada con Pandora SSO
         </p>
 
         {/* Estado: esperando */}
@@ -159,11 +159,11 @@ const SSOLoginPage = () => {
             }}>
               <Loader2 style={{ width: "18px", height: "18px", color: "#2563eb", flexShrink: 0, animation: "spin 1.5s linear infinite" }} />
               <span style={{ fontSize: "13px", color: "#1d4ed8", fontWeight: "500" }}>
-                Esperando sesion de Pandora SSO...
+                Esperando sesión de Pandora SSO...
               </span>
             </div>
             <p style={{ fontSize: "12px", color: "#475569", lineHeight: 1.7 }}>
-              Esta aplicacion recibe tu sesion automaticamente desde{" "}
+              Esta aplicación recibe tu sesión automáticamente desde{" "}
               <strong style={{ color: "#0f172a" }}>Pandora</strong>.
               <br />
               Si accediste directamente, abre primero desde el portal:
