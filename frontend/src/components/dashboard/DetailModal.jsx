@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, X, Download, Printer } from 'lucide-react';
+import { FileText, X, Download, Printer, FileSpreadsheet } from 'lucide-react';
 import { API_BASE_URL } from '../../context/AuthContext';
+import { exportLegalizacionToExcel } from '../../utils/excelExport';
 
 const DetailModal = ({
   selectedLeg,
@@ -198,6 +199,14 @@ const DetailModal = ({
               </button>
             </>
           )}
+          <button
+            onClick={() => exportLegalizacionToExcel(selectedLeg)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold transition-all duration-200 shadow-md shadow-emerald-700/10"
+            title="Exportar a Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Exportar Excel
+          </button>
           <button
             onClick={() => navigate(`/reporte?id=${selectedLeg.id}`)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-xl text-xs font-semibold transition-all duration-200 shadow-md shadow-blue-700/10"

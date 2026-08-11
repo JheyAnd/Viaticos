@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
-import { Printer, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Printer, ArrowLeft, Loader2, AlertCircle, FileSpreadsheet, Image as ImageIcon } from 'lucide-react';
 import Layout from '../components/Layout';
+import { exportLegalizacionToExcel } from '../utils/excelExport';
 
 const fmt = (val) => {
   const num = parseFloat(val ?? 0);
@@ -45,6 +46,7 @@ const ReportePage = () => {
   const [leg, setLeg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [includeImages, setIncludeImages] = useState(true);
 
   useEffect(() => {
     if (!legId) {
@@ -90,6 +92,7 @@ const ReportePage = () => {
   }
 
   const gastos = leg.gastos || [];
+  const gastosWithComprobante = gastos.filter(g => g.comprobante_url);
   const pages = [];
   for (let i = 0; i < Math.max(1, Math.ceil(gastos.length / ROWS_PER_PAGE)); i++) {
     pages.push(gastos.slice(i * ROWS_PER_PAGE, (i + 1) * ROWS_PER_PAGE));
@@ -100,7 +103,7 @@ const ReportePage = () => {
   return (
     <Layout>
       {/* Barra de herramientas */}
-      <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+      <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
         <button
           onClick={() => navigate(-1)}
           style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14 }}
@@ -108,9 +111,31 @@ const ReportePage = () => {
           <ArrowLeft style={{ width: 16, height: 16 }} /> Volver
         </button>
         <div style={{ flex: 1 }} />
+        
+        {gastosWithComprobante.length > 0 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer', userSelect: 'none', padding: '6px 12px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: 8, border: '1px solid #334155' }}>
+            <input
+              type="checkbox"
+              checked={includeImages}
+              onChange={(e) => setIncludeImages(e.target.checked)}
+              style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#2563eb' }}
+            />
+            <ImageIcon style={{ width: 16, height: 16, color: '#60a5fa' }} />
+            Incluir imágenes en PDF ({gastosWithComprobante.length})
+          </label>
+        )}
+
+        <button
+          onClick={() => exportLegalizacionToExcel(leg)}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
+          title="Exportar a Hoja de Cálculo Excel (.xlsx)"
+        >
+          <FileSpreadsheet style={{ width: 16, height: 16 }} /> Exportar a Excel
+        </button>
+
         <button
           onClick={() => window.print()}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
         >
           <Printer style={{ width: 16, height: 16 }} /> Imprimir / Guardar PDF
         </button>
@@ -279,6 +304,93 @@ const ReportePage = () => {
             </div>
           );
         })}
+
+        {/* ── Anexo: Comprobantes de Gastos (Imágenes adjuntas para PDF) ── */}
+        {includeImages && gastosWithComprobante.length > 0 && (
+          <div
+            style={{
+              fontFamily: 'Arial, Helvetica, sans-serif',
+              background: '#fff',
+              padding: '20px 24px',
+              pageBreakBefore: 'always',
+              boxShadow: '0 1px 10px rgba(0,0,0,0.08)',
+              marginTop: 32,
+              borderRadius: 4
+            }}
+          >
+            <div style={{ borderBottom: '2px solid #1a56a0', paddingBottom: 8, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 'bold', color: '#1a56a0', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ANEXO: COMPROBANTES DE GASTOS ADJUNTOS ({gastosWithComprobante.length})
+              </h3>
+              <span style={{ fontSize: 9, color: '#666' }}>PCM ENGINEERING - EXPENSE REPORT CHECK {checkNumber}</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
+              {gastosWithComprobante.map((g, idx) => {
+                const fullUrl = g.comprobante_url.startsWith('/static') ? `${API_BASE_URL}${g.comprobante_url}` : g.comprobante_url;
+                const isPdf = g.comprobante_url.toLowerCase().endsWith('.pdf');
+
+                return (
+                  <div
+                    key={g.id}
+                    style={{
+                      border: '1px solid #ccc',
+                      borderRadius: 6,
+                      padding: 14,
+                      background: '#fafafa',
+                      pageBreakInside: 'avoid',
+                      breakInside: 'avoid'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: 6, marginBottom: 8, fontSize: 10 }}>
+                      <div>
+                        <span style={{ fontWeight: 'bold', color: '#1a56a0' }}>GASTO N° {idx + 1}</span>
+                        {g.no_comprobante && <span style={{ color: '#475569', marginLeft: 8 }}>| Comprobante: <b>{g.no_comprobante}</b></span>}
+                        {g.proveedor && <span style={{ color: '#475569', marginLeft: 8 }}>| Proveedor: <b>{g.proveedor}</b></span>}
+                      </div>
+                      <div style={{ fontWeight: 'bold', color: '#0f172a' }}>
+                        {fmtDate(g.fecha_gasto)} &nbsp;|&nbsp; COP {fmt(g.monto)}
+                      </div>
+                    </div>
+                    
+                    <div style={{ fontSize: 9.5, color: '#334155', marginBottom: 10 }}>
+                      <b>Descripción:</b> {g.descripcion} &nbsp;({g.categoria})
+                    </div>
+
+                    {!isPdf ? (
+                      <div style={{ textAlign: 'center', background: '#fff', padding: 8, borderRadius: 4, border: '1px solid #cbd5e1' }}>
+                        <img
+                          src={fullUrl}
+                          alt={`Comprobante Gasto ${g.id}`}
+                          style={{
+                            maxHeight: '480px',
+                            maxWidth: '100%',
+                            objectFit: 'contain',
+                            display: 'inline-block',
+                            borderRadius: 2
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ padding: 16, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, textAlign: 'center', fontSize: 10 }}>
+                        <p style={{ margin: 0, fontWeight: 'bold', color: '#1e40af' }}>📄 Documento PDF Adjunto</p>
+                        <p style={{ margin: '4px 0 8px 0', color: '#3b82f6', fontSize: 9 }}>El archivo cargado es un documento en formato PDF.</p>
+                        <a
+                          href={fullUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: '#1d4ed8', fontWeight: 'bold', textDecoration: 'underline' }}
+                        >
+                          Abrir o Descargar PDF Original
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -286,7 +398,8 @@ const ReportePage = () => {
           .no-print { display: none !important; }
           body { margin: 0; background: #fff !important; }
           #report-print-area { margin: 0; padding: 0; }
-          @page { size: A4 landscape; margin: 10mm; }
+          @page { size: A4 landscape; margin: 8mm; }
+          img { max-height: 440px !important; page-break-inside: avoid; }
         }
       `}</style>
     </Layout>
