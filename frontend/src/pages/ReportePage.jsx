@@ -327,14 +327,7 @@ const ReportePage = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
               {gastosWithComprobante.map((g, idx) => {
-                let fullUrl = g.comprobante_url;
-                if (fullUrl.startsWith('/')) {
-                  fullUrl = `${API_BASE_URL}${fullUrl}`;
-                } else if (!fullUrl.startsWith('http')) {
-                  fullUrl = `${API_BASE_URL}/${fullUrl}`;
-                }
-                fullUrl = encodeURI(fullUrl);
-                
+                const fullUrl = g.comprobante_url.startsWith('/static') ? `${API_BASE_URL}${g.comprobante_url}` : g.comprobante_url;
                 const isPdf = g.comprobante_url.toLowerCase().endsWith('.pdf');
 
                 return (
