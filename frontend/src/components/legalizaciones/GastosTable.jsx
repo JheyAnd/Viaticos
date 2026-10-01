@@ -62,7 +62,7 @@ const GastosTable = ({ gastos, handleEliminarGasto, formatMoney }) => {
                   <td className="py-3 px-6 text-center">
                     {g.comprobante_url ? (
                       <a
-                        href={g.comprobante_url.startsWith('/static') ? `${API_BASE_URL}${g.comprobante_url}` : g.comprobante_url}
+                        href={g.comprobante_url.startsWith('http') ? g.comprobante_url : `${API_BASE_URL}${g.comprobante_url.startsWith('/') ? '' : '/'}${g.comprobante_url}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-blue-400 hover:text-blue-300 underline"

@@ -181,7 +181,7 @@ const ColaboradorModal = ({
                                         <td className="py-2 px-4 text-center">
                                           {gasto.comprobante_url ? (
                                             <a
-                                              href={gasto.comprobante_url.startsWith('/static') ? `${API_BASE_URL}${gasto.comprobante_url}` : gasto.comprobante_url}
+                                              href={gasto.comprobante_url.startsWith('http') ? gasto.comprobante_url : `${API_BASE_URL}${gasto.comprobante_url.startsWith('/') ? '' : '/'}${gasto.comprobante_url}`}
                                               target="_blank"
                                               rel="noreferrer"
                                               className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 underline"
